@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    /* 1. Language & Environment */
+    "target": "es2020",               /* Modern JS features (Async/Await, etc.) */
+    "module": "commonjs",             /* Standard Node.js module system */
+    "lib": ["es2020"],                /* Include standard library types */
+    
+    /* 2. File Structure */
+    "rootDir": "./src",               /* Where your code lives */
+    "outDir": "./dist",               /* Where the built code goes */
+    "removeComments": true,           /* meaningful comments only in source */
+    
+    /* 3. Type Checking (Strictness) - CRITICAL */
+    "strict": true,                   /* Enable all strict type-checking options */
+    "noImplicitAny": true,            /* Error if type is not specified */
+    "strictNullChecks": true,         /* Handle null/undefined explicitly */
+    "noUnusedLocals": true,           /* Error if you define a variable but don't use it */
+    "noUnusedParameters": true,       /* Error if function params are unused */
+    
+    /* 4. Module Resolution */
+    "baseUrl": ".",
+    "esModuleInterop": true,          /* Allow importing CommonJS modules cleanly */
+    "resolveJsonModule": true,        /* Allow importing .json files */
+    "skipLibCheck": true,             /* Speed up compilation by skipping lib checks */
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "tests"]
+}
