@@ -1,0 +1,35 @@
+# ----------------------
+# 1. Dependency Directories
+# ----------------------
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# ----------------------
+# 2. Environment Variables (SECURITY CRITICAL)
+# ----------------------
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# ----------------------
+# 3. Build & Runtime Artifacts
+# ----------------------
+dist/
+build/
+coverage/
+
+# ----------------------
+# 4. OS & Editor Files (Noise)
+# ----------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ----------------------
+# 5. Local Docker Volumes (If any)
+# ----------------------
+pgdata/
