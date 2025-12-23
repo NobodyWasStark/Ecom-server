@@ -13,6 +13,7 @@ yarn-error.log
 .env.development
 .env.test
 .env.production
+docker-compose.yml
 
 # ----------------------
 # 3. Build & Runtime Artifacts

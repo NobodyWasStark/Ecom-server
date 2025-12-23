@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import authRoutes from './modules/auth/auth.routes';
+import productRoutes from './modules/products/product.routes';
 
 const app: Application = express();
 
@@ -26,5 +27,6 @@ app.get('/health', (_req: Request, res: Response) => {
 
 // Mount Modules
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/products', productRoutes);
 
 export default app;
