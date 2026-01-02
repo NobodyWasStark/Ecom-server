@@ -90,6 +90,7 @@ model Product {
   slug            String?  @unique  // Make it optional temporarily
   description     String
   price           Int
+  original_price  Int?     // Original price before discount (nullable = no discount)
   currency        String   @default("BDT")
   stock           Int      @default(0)
   is_preorder     Boolean  @default(true)
