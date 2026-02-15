@@ -1,7 +1,7 @@
-import express, { Application, Request, Response } from "express";
-import cors from "cors";
-import helmet from "helmet";
 import cookieParser from "cookie-parser";
+import cors from "cors";
+import express, { Application, Request, Response } from "express";
+import helmet from "helmet";
 import { env } from "./config/env";
 import { errorHandler } from "./shared/middlewares/error.middleware";
 import {
@@ -10,15 +10,15 @@ import {
 } from "./shared/middlewares/rate-limit.middleware";
 
 // Import all route modules
-import authRoutes from "./modules/auth/auth.routes";
-import productRoutes from "./modules/products/product.routes";
-import orderRoutes from "./modules/orders/order.routes";
-import paymentRoutes from "./modules/payments/payment.routes";
 import addressRoutes from "./modules/addresses/address.routes";
+import adminRoutes from "./modules/admin/admin.routes";
+import authRoutes from "./modules/auth/auth.routes";
 import cartRoutes from "./modules/cart/cart.routes";
 import categoryRoutes from "./modules/categories/category.routes";
+import orderRoutes from "./modules/orders/order.routes";
+import paymentRoutes from "./modules/payments/payment.routes";
+import productRoutes from "./modules/products/product.routes";
 import reviewRoutes from "./modules/reviews/review.routes";
-import adminRoutes from "./modules/admin/admin.routes";
 
 const app: Application = express();
 const allowedOrigins = [
@@ -46,7 +46,7 @@ app.use(
       return callback(new Error("CORS policy violation"));
     },
     credentials: true,
-  })
+  }),
 );
 
 // 2. Rate limiting (only in production to avoid slowing down development)
