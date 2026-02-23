@@ -1,6 +1,6 @@
 import { prisma } from "../../config/prisma.client";
+import { BadRequestError, NotFoundError } from "../../shared/errors/app-error";
 import { generateUniqueSlug } from "../../shared/utils/slug.util";
-import { NotFoundError, BadRequestError } from "../../shared/errors/app-error";
 
 // Create product with slug and images
 export const createProduct = async (data: any) => {
@@ -35,6 +35,7 @@ export const getAllProducts = async (filters?: {
   category_id?: string;
   minPrice?: number;
   maxPrice?: number;
+  minRating?: number;
   inStock?: boolean;
   sortBy?: "price_asc" | "price_desc" | "newest" | "name";
   page?: number;
@@ -69,6 +70,26 @@ export const getAllProducts = async (filters?: {
   // Stock filter
   if (filters?.inStock) {
     where.stock = { gt: 0 };
+  }
+
+  // Rating filter — find product IDs whose avg rating >= minRating
+  if (filters?.minRating !== undefined && filters.minRating > 0) {
+    const ratingGroups = await prisma.review.groupBy({
+      by: ["product_id"],
+      _avg: { rating: true },
+      having: {
+        rating: { _avg: { gte: filters.minRating } },
+      },
+    });
+    const qualifyingIds = ratingGroups.map((r) => r.product_id);
+    // Merge with any existing id filter
+    if (where.id?.in) {
+      where.id.in = where.id.in.filter((id: string) =>
+        qualifyingIds.includes(id),
+      );
+    } else {
+      where.id = { in: qualifyingIds };
+    }
   }
 
   // Sorting
@@ -111,7 +132,7 @@ export const getAllProducts = async (filters?: {
           : null,
         reviewCount: product._count.reviews,
       };
-    })
+    }),
   );
 
   return {
@@ -235,7 +256,7 @@ export const deleteProduct = async (id: string) => {
 
   if (product._count.orderItems > 0) {
     throw new BadRequestError(
-      "Cannot delete product that has been ordered. Consider marking it as out of stock instead."
+      "Cannot delete product that has been ordered. Consider marking it as out of stock instead.",
     );
   }
 
@@ -259,7 +280,7 @@ export const addProductImage = async (
     alt_text?: string;
     is_primary?: boolean;
     order?: number;
-  }
+  },
 ) => {
   const product = await prisma.product.findUnique({ where: { id: productId } });
   if (!product) throw new NotFoundError("Product not found");

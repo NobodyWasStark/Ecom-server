@@ -1,16 +1,8 @@
 import { Router } from "express";
-import { authenticate } from "../../shared/middlewares/auth.middleware";
+import { authenticate, requireAdmin } from "../../shared/middlewares/auth.middleware";
 import * as adminController from "./admin.controller";
 
 const router = Router();
-
-// Middleware to check if user is admin
-const requireAdmin = (req: any, res: any, next: any) => {
-  if (!req.user || req.user.role !== "ADMIN") {
-    return res.status(403).json({ error: "Admin access required" });
-  }
-  next();
-};
 
 // All admin routes require authentication and admin role
 router.use(authenticate);

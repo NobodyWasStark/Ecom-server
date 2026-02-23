@@ -12,7 +12,7 @@ import { sendPasswordResetEmail } from "../../shared/utils/email.util";
 
 // Helper to sign JWT
 const signToken = (userId: string, role: string) => {
-  return jwt.sign({ userId, role }, env.JWT_SECRET || "secret", {
+  return jwt.sign({ userId, role }, env.JWT_SECRET, {
     expiresIn: "7d",
   });
 };

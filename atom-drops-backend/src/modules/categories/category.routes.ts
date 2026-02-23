@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate } from "../../shared/middlewares/auth.middleware";
+import { authenticate, requireAdmin } from "../../shared/middlewares/auth.middleware";
 import { validate } from "../../shared/middlewares/validate.middleware";
 import * as categoryController from "./category.controller";
 import {
@@ -20,19 +20,21 @@ router.get(
   categoryController.getCategoryProducts
 );
 
-// Admin routes (require authentication)
+// Admin routes (require authentication + admin role)
 router.post(
   "/",
   authenticate,
+  requireAdmin,
   validate(createCategorySchema),
   categoryController.createCategory
 );
 router.patch(
   "/:id",
   authenticate,
+  requireAdmin,
   validate(updateCategorySchema),
   categoryController.updateCategory
 );
-router.delete("/:id", authenticate, categoryController.deleteCategory);
+router.delete("/:id", authenticate, requireAdmin, categoryController.deleteCategory);
 
 export default router;

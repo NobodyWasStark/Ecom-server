@@ -15,6 +15,20 @@ declare global {
   }
 }
 
+// Require ADMIN role — must be used AFTER authenticate
+export const requireAdmin = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!req.user || req.user.role !== "ADMIN") {
+    return res.status(StatusCodes.FORBIDDEN).json({
+      error: "Admin access required",
+    });
+  }
+  next();
+};
+
 export const authenticate = (
   req: Request,
   res: Response,

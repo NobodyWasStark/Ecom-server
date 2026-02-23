@@ -5,11 +5,9 @@ import {
   BadRequestError,
 } from "../../shared/errors/app-error";
 import { sendPaymentSuccessEmail } from "../../shared/utils/email.util";
-// import axios from 'axios';
-// import { env } from '../../config/env';
 
-// TODO: When integrating real bKash API, add these to .env file:
-// BKASH_USERNAME, BKASH_PASSWORD, BKASH_APP_KEY, BKASH_SECRET
+// bKash manual payment number
+const BKASH_NUMBER = "01997125063";
 
 export const initiatePayment = async (userId: string, orderId: string) => {
   // 1. Get the Order
@@ -22,20 +20,10 @@ export const initiatePayment = async (userId: string, orderId: string) => {
   if (order.user_id !== userId) throw new UnauthorizedError("Unauthorized");
   if (order.status === "PAID") throw new BadRequestError("Order already paid");
 
-  // 2. Prepare bKash Payload
-  // NOTE: In a real app, you would call bKash's Grant Token API first.
-  // For this tutorial, we simulate the "Create Payment" call.
-
-  // const amount = (order.total_amount / 100).toFixed(2); // Convert cents to Taka
-
   try {
-    // REAL BKASH API CALL WOULD GO HERE
-    // const { data } = await axios.post('https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized/checkout/create', { ... })
+    const paymentID = `BKASH_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
 
-    // 3. MOCK RESPONSE (For testing without credentials)
-    const paymentID = `BKASH_${Math.floor(Math.random() * 1000000)}`;
-
-    // 4. Save Payment Record in DB
+    // Save Payment Record in DB
     await prisma.payment.create({
       data: {
         order_id: order.id,
@@ -46,10 +34,23 @@ export const initiatePayment = async (userId: string, orderId: string) => {
       },
     });
 
-    // Return the URL the frontend should redirect to (Simulated)
+    // Build WhatsApp message with order details
+    const amount = order.total_amount.toLocaleString();
+    const whatsappMessage = encodeURIComponent(
+      `🛒 *Atom Drops — bKash Payment*\n\n` +
+      `Order ID: ${order.id}\n` +
+      `Amount: ৳${amount}\n` +
+      `Payment Ref: ${paymentID}\n\n` +
+      `I'd like to pay for my order via bKash. Please confirm once received.`
+    );
+    const whatsappURL = `https://wa.me/8801997125063?text=${whatsappMessage}`;
+
     return {
       paymentID,
-      bkashURL: `http://localhost:5000/api/v1/payments/mock-bkash-page?paymentID=${paymentID}`,
+      bkashNumber: BKASH_NUMBER,
+      amount: order.total_amount,
+      orderId: order.id,
+      whatsappURL,
     };
   } catch (error) {
     throw new Error("Payment initiation failed");

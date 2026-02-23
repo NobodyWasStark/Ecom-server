@@ -18,7 +18,7 @@ export const register = async (req: Request, res: Response) => {
 
     res.status(StatusCodes.CREATED).json({
       message: "User registered successfully",
-      data: { user: result.user, token: result.token },
+      data: { user: result.user },
     });
   } catch (error: any) {
     res
@@ -41,7 +41,7 @@ export const login = async (req: Request, res: Response) => {
 
     res.status(StatusCodes.OK).json({
       message: "Login successful",
-      data: { user: result.user, token: result.token },
+      data: { user: result.user },
     });
   } catch (error: any) {
     res
@@ -51,7 +51,11 @@ export const login = async (req: Request, res: Response) => {
 };
 
 export const logout = async (_req: Request, res: Response) => {
-  res.clearCookie("token");
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: env.NODE_ENV === "production",
+    sameSite: env.NODE_ENV === "production" ? "none" : "strict",
+  });
   res.status(StatusCodes.OK).json({ message: "Logged out successfully" });
 };
 
@@ -94,7 +98,9 @@ export const getProfile = async (req: Request, res: Response) => {
 export const updateProfile = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const user = await authService.updateProfile(userId, req.body);
+    // Whitelist allowed fields to prevent mass assignment (privilege escalation)
+    const { name, phone } = req.body;
+    const user = await authService.updateProfile(userId, { name, phone });
     res.status(StatusCodes.OK).json({
       message: "Profile updated successfully",
       data: user,

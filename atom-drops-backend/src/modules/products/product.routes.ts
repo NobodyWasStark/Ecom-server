@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as productController from "./product.controller";
-import { authenticate } from "../../shared/middlewares/auth.middleware";
+import { authenticate, requireAdmin } from "../../shared/middlewares/auth.middleware";
 import { validate } from "../../shared/middlewares/validate.middleware";
 import { createProductSchema } from "./product.schema";
 
@@ -15,22 +15,25 @@ router.get("/:id", productController.getProduct);
 router.post(
   "/",
   authenticate,
+  requireAdmin,
   validate(createProductSchema),
   productController.createProduct
 );
-router.patch("/:id", authenticate, productController.updateProduct);
-router.delete("/:id", authenticate, productController.deleteProduct);
+router.patch("/:id", authenticate, requireAdmin, productController.updateProduct);
+router.delete("/:id", authenticate, requireAdmin, productController.deleteProduct);
 
 // Image management routes
-router.post("/:id/images", authenticate, productController.addProductImage);
+router.post("/:id/images", authenticate, requireAdmin, productController.addProductImage);
 router.delete(
   "/:id/images/:imageId",
   authenticate,
+  requireAdmin,
   productController.deleteProductImage
 );
 router.patch(
   "/:id/images/:imageId/primary",
   authenticate,
+  requireAdmin,
   productController.setPrimaryImage
 );
 

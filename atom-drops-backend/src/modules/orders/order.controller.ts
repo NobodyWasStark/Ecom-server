@@ -48,8 +48,16 @@ export const createOrderFromCart = async (req: Request, res: Response) => {
 export const getMyOrders = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const orders = await orderService.getMyOrders(userId);
-    res.status(StatusCodes.OK).json({ data: orders });
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const limit = req.query.limit
+      ? Math.min(parseInt(req.query.limit as string), 50)
+      : 10;
+    const result = await orderService.getMyOrders(
+      userId,
+      isNaN(page) || page < 1 ? 1 : page,
+      isNaN(limit) || limit < 1 ? 10 : limit
+    );
+    res.status(StatusCodes.OK).json({ data: result });
   } catch (error: any) {
     res
       .status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR)

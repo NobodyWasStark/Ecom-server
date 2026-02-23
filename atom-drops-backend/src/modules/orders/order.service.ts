@@ -20,41 +20,41 @@ export const createOrder = async (
     if (!address) throw new NotFoundError("Invalid shipping address");
   }
 
-  // 2. Fetch all products and validate stock
-  const productIds = items.map((i) => i.product_id);
-  const products = await prisma.product.findMany({
-    where: { id: { in: productIds } },
-  });
+  // 2. Create order and reduce stock atomically (all inside transaction to prevent race conditions)
+  const order = await prisma.$transaction(async (tx) => {
+    // Fetch all products inside the transaction for consistent reads
+    const productIds = items.map((i) => i.product_id);
+    const products = await tx.product.findMany({
+      where: { id: { in: productIds } },
+    });
 
-  if (products.length !== items.length) {
-    throw new NotFoundError("Some products not found");
-  }
-
-  let totalAmount = 0;
-  const orderItemsData = items.map((item) => {
-    const product = products.find((p) => p.id === item.product_id);
-    if (!product)
-      throw new NotFoundError(`Product ${item.product_id} not found`);
-
-    // ✅ Stock validation
-    if (product.stock < item.quantity) {
-      throw new BadRequestError(
-        `Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}`
-      );
+    if (products.length !== items.length) {
+      throw new NotFoundError("Some products not found");
     }
 
-    const itemTotal = product.price * item.quantity;
-    totalAmount += itemTotal;
+    let totalAmount = 0;
+    const orderItemsData = items.map((item) => {
+      const product = products.find((p) => p.id === item.product_id);
+      if (!product)
+        throw new NotFoundError(`Product ${item.product_id} not found`);
 
-    return {
-      product_id: product.id,
-      quantity: item.quantity,
-      price: product.price,
-    };
-  });
+      // Stock validation inside transaction
+      if (product.stock < item.quantity) {
+        throw new BadRequestError(
+          `Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}`
+        );
+      }
 
-  // 3. Create order and reduce stock atomically
-  const order = await prisma.$transaction(async (tx) => {
+      const itemTotal = product.price * item.quantity;
+      totalAmount += itemTotal;
+
+      return {
+        product_id: product.id,
+        quantity: item.quantity,
+        price: product.price,
+      };
+    });
+
     // Create the order
     const newOrder = await tx.order.create({
       data: {
@@ -75,23 +75,36 @@ export const createOrder = async (
       },
     });
 
-    // ✅ Reduce stock for each product
+    // Reduce stock for each product atomically
     for (const item of items) {
-      await tx.product.update({
-        where: { id: item.product_id },
+      const updated = await tx.product.updateMany({
+        where: {
+          id: item.product_id,
+          stock: { gte: item.quantity }, // Guard: only decrement if sufficient stock
+        },
         data: {
           stock: {
             decrement: item.quantity,
           },
         },
       });
+
+      if (updated.count === 0) {
+        throw new BadRequestError(
+          `Stock changed during checkout. Please try again.`
+        );
+      }
     }
 
     return newOrder;
   });
 
-  // Send order confirmation email
-  await sendOrderConfirmationEmail(order.user.email, order);
+  // Send order confirmation email (outside transaction — non-critical)
+  try {
+    await sendOrderConfirmationEmail(order.user.email, order);
+  } catch {
+    // Don't fail the order if email fails
+  }
 
   return order;
 };
@@ -129,32 +142,53 @@ export const createOrderFromCart = async (
   return order;
 };
 
-// Get user's orders
-export const getMyOrders = async (userId: string) => {
-  return await prisma.order.findMany({
-    where: { user_id: userId },
-    include: {
-      items: {
-        include: {
-          product: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-              price: true,
-              images: {
-                where: { is_primary: true },
-                take: 1,
+// Get user's orders with pagination
+export const getMyOrders = async (
+  userId: string,
+  page: number = 1,
+  limit: number = 10
+) => {
+  const skip = (page - 1) * limit;
+
+  const [orders, total] = await Promise.all([
+    prisma.order.findMany({
+      where: { user_id: userId },
+      include: {
+        items: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                price: true,
+                images: {
+                  where: { is_primary: true },
+                  take: 1,
+                },
               },
             },
           },
         },
+        shipping_address: true,
+        payment: true,
       },
-      shipping_address: true,
-      payment: true,
+      orderBy: { created_at: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.order.count({ where: { user_id: userId } }),
+  ]);
+
+  return {
+    orders,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
     },
-    orderBy: { created_at: "desc" },
-  });
+  };
 };
 
 // Get single order
@@ -259,6 +293,7 @@ export const updateOrderStatus = async (
 ) => {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
+    include: { payment: true },
   });
 
   if (!order) throw new NotFoundError("Order not found");
@@ -271,6 +306,14 @@ export const updateOrderStatus = async (
     const estimatedDelivery = new Date();
     estimatedDelivery.setDate(estimatedDelivery.getDate() + 7);
     updateData.estimated_delivery = estimatedDelivery;
+  }
+
+  // When admin marks order as PAID, also update the payment record
+  if (status === "PAID" && order.payment && order.payment.status !== "SUCCESS") {
+    await prisma.payment.update({
+      where: { id: order.payment.id },
+      data: { status: "SUCCESS" },
+    });
   }
 
   return await prisma.order.update({

@@ -21,30 +21,41 @@ export const bkashCallback = async (req: Request, res: Response) => {
   try {
     const { paymentID, status } = req.query;
 
+    if (!paymentID || typeof paymentID !== "string") {
+      return res.redirect(
+        `${env.FRONTEND_URL}/payment/failed?message=invalid_payment`
+      );
+    }
+
     if (status === "cancel" || status === "failure") {
       return res.redirect(
         `${env.FRONTEND_URL}/payment/failed?message=${status}`
       );
     }
 
-    await paymentService.executePayment(String(paymentID));
+    await paymentService.executePayment(paymentID);
     res.redirect(`${env.FRONTEND_URL}/payment/success?trxID=${paymentID}`);
   } catch (error: any) {
     res.redirect(`${env.FRONTEND_URL}/payment/failed?message=${error.message}`);
   }
 };
 
-// MOCK PAGE (Just for testing)
+// MOCK PAGE (Development/testing only)
 export const mockBkashPage = (req: Request, res: Response) => {
-  const { paymentID } = req.query;
+  if (env.NODE_ENV === "production") {
+    return res.status(StatusCodes.NOT_FOUND).json({ error: "Not available" });
+  }
+
+  const paymentID = String(req.query.paymentID || "")
+    .replace(/[<>"'&]/g, ""); // Sanitize to prevent XSS
   res.send(`
     <h1>Mock bKash Payment Page</h1>
     <p>Payment ID: ${paymentID}</p>
-    <button onclick="window.location.href='/api/v1/payments/bkash/callback?paymentID=${paymentID}&status=success'">
+    <button onclick="window.location.href='/api/v1/payments/bkash/callback?paymentID=${encodeURIComponent(paymentID)}&status=success'">
       Confirm Payment (Success)
     </button>
     <br><br>
-    <button onclick="window.location.href='/api/v1/payments/bkash/callback?paymentID=${paymentID}&status=failure'">
+    <button onclick="window.location.href='/api/v1/payments/bkash/callback?paymentID=${encodeURIComponent(paymentID)}&status=failure'">
       Cancel Payment
     </button>
   `);
