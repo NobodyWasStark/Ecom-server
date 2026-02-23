@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
+import jwt from "jsonwebtoken";
 import { env } from "../../config/env";
 
 // Extend Express Request type to include user
@@ -19,7 +19,7 @@ declare global {
 export const requireAdmin = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   if (!req.user || req.user.role !== "ADMIN") {
     return res.status(StatusCodes.FORBIDDEN).json({
@@ -32,7 +32,7 @@ export const requireAdmin = (
 export const authenticate = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   // 1. Get token from Cookies OR Header
   const token = req.cookies.token || req.headers.authorization?.split(" ")[1];

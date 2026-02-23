@@ -1,7 +1,7 @@
 import { prisma } from "../../config/prisma.client";
 import {
-  NotFoundError,
   BadRequestError,
+  NotFoundError,
   UnauthorizedError,
 } from "../../shared/errors/app-error";
 import { sendOrderConfirmationEmail } from "../../shared/utils/email.util";
@@ -10,7 +10,7 @@ import { sendOrderConfirmationEmail } from "../../shared/utils/email.util";
 export const createOrder = async (
   userId: string,
   items: { product_id: string; quantity: number }[],
-  shippingAddressId?: string
+  shippingAddressId?: string,
 ) => {
   // 1. Validate shipping address
   if (shippingAddressId) {
@@ -41,7 +41,7 @@ export const createOrder = async (
       // Stock validation inside transaction
       if (product.stock < item.quantity) {
         throw new BadRequestError(
-          `Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}`
+          `Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}`,
         );
       }
 
@@ -91,7 +91,7 @@ export const createOrder = async (
 
       if (updated.count === 0) {
         throw new BadRequestError(
-          `Stock changed during checkout. Please try again.`
+          `Stock changed during checkout. Please try again.`,
         );
       }
     }
@@ -112,7 +112,7 @@ export const createOrder = async (
 // ✅ Create order from cart
 export const createOrderFromCart = async (
   userId: string,
-  shippingAddressId?: string
+  shippingAddressId?: string,
 ) => {
   const cart = await prisma.cart.findUnique({
     where: { user_id: userId },
@@ -146,7 +146,7 @@ export const createOrderFromCart = async (
 export const getMyOrders = async (
   userId: string,
   page: number = 1,
-  limit: number = 10
+  limit: number = 10,
 ) => {
   const skip = (page - 1) * limit;
 
@@ -245,7 +245,7 @@ export const cancelOrder = async (userId: string, orderId: string) => {
     order.status === "DELIVERED"
   ) {
     throw new BadRequestError(
-      "Cannot cancel orders that are paid, processing, shipped, or delivered"
+      "Cannot cancel orders that are paid, processing, shipped, or delivered",
     );
   }
 
@@ -289,7 +289,7 @@ export const cancelOrder = async (userId: string, orderId: string) => {
 export const updateOrderStatus = async (
   orderId: string,
   status: string,
-  trackingNumber?: string
+  trackingNumber?: string,
 ) => {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
@@ -309,7 +309,11 @@ export const updateOrderStatus = async (
   }
 
   // When admin marks order as PAID, also update the payment record
-  if (status === "PAID" && order.payment && order.payment.status !== "SUCCESS") {
+  if (
+    status === "PAID" &&
+    order.payment &&
+    order.payment.status !== "SUCCESS"
+  ) {
     await prisma.payment.update({
       where: { id: order.payment.id },
       data: { status: "SUCCESS" },

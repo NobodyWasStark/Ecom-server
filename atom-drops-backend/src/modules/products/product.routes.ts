@@ -1,7 +1,10 @@
 import { Router } from "express";
-import * as productController from "./product.controller";
-import { authenticate, requireAdmin } from "../../shared/middlewares/auth.middleware";
+import {
+  authenticate,
+  requireAdmin,
+} from "../../shared/middlewares/auth.middleware";
 import { validate } from "../../shared/middlewares/validate.middleware";
+import * as productController from "./product.controller";
 import { createProductSchema } from "./product.schema";
 
 const router = Router();
@@ -17,24 +20,39 @@ router.post(
   authenticate,
   requireAdmin,
   validate(createProductSchema),
-  productController.createProduct
+  productController.createProduct,
 );
-router.patch("/:id", authenticate, requireAdmin, productController.updateProduct);
-router.delete("/:id", authenticate, requireAdmin, productController.deleteProduct);
+router.patch(
+  "/:id",
+  authenticate,
+  requireAdmin,
+  productController.updateProduct,
+);
+router.delete(
+  "/:id",
+  authenticate,
+  requireAdmin,
+  productController.deleteProduct,
+);
 
 // Image management routes
-router.post("/:id/images", authenticate, requireAdmin, productController.addProductImage);
+router.post(
+  "/:id/images",
+  authenticate,
+  requireAdmin,
+  productController.addProductImage,
+);
 router.delete(
   "/:id/images/:imageId",
   authenticate,
   requireAdmin,
-  productController.deleteProductImage
+  productController.deleteProductImage,
 );
 router.patch(
   "/:id/images/:imageId/primary",
   authenticate,
   requireAdmin,
-  productController.setPrimaryImage
+  productController.setPrimaryImage,
 );
 
 export default router;

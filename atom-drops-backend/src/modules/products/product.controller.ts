@@ -27,9 +27,7 @@ export const getProducts = async (req: Request, res: Response) => {
     const parsedMinRating = req.query.minRating
       ? parseFloat(req.query.minRating as string)
       : undefined;
-    const parsedPage = req.query.page
-      ? parseInt(req.query.page as string)
-      : 1;
+    const parsedPage = req.query.page ? parseInt(req.query.page as string) : 1;
     const parsedLimit = req.query.limit
       ? parseInt(req.query.limit as string)
       : 20;
@@ -43,9 +41,10 @@ export const getProducts = async (req: Request, res: Response) => {
       inStock: req.query.inStock === "true",
       sortBy: req.query.sortBy as any,
       page: !isNaN(parsedPage) && parsedPage > 0 ? parsedPage : 1,
-      limit: !isNaN(parsedLimit) && parsedLimit > 0
-        ? Math.min(parsedLimit, 100)
-        : 20,
+      limit:
+        !isNaN(parsedLimit) && parsedLimit > 0
+          ? Math.min(parsedLimit, 100)
+          : 20,
     };
 
     const result = await productService.getAllProducts(filters);

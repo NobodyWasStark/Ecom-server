@@ -1,12 +1,12 @@
-import { prisma } from "../../config/prisma.client";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import jwt from "jsonwebtoken";
 import { env } from "../../config/env";
+import { prisma } from "../../config/prisma.client";
 import {
   BadRequestError,
-  UnauthorizedError,
   NotFoundError,
+  UnauthorizedError,
 } from "../../shared/errors/app-error";
 import { sendPasswordResetEmail } from "../../shared/utils/email.util";
 
@@ -185,7 +185,7 @@ export const getProfile = async (userId: string) => {
 // Update profile
 export const updateProfile = async (
   userId: string,
-  data: { name?: string; phone?: string }
+  data: { name?: string; phone?: string },
 ) => {
   return await prisma.user.update({
     where: { id: userId },

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import * as orderService from "./order.service";
 import { StatusCodes } from "http-status-codes";
+import * as orderService from "./order.service";
 
 export const createOrder = async (req: Request, res: Response) => {
   try {
@@ -10,7 +10,7 @@ export const createOrder = async (req: Request, res: Response) => {
     const order = await orderService.createOrder(
       userId,
       items,
-      shipping_address_id
+      shipping_address_id,
     );
 
     res.status(StatusCodes.CREATED).json({
@@ -31,7 +31,7 @@ export const createOrderFromCart = async (req: Request, res: Response) => {
 
     const order = await orderService.createOrderFromCart(
       userId,
-      shipping_address_id
+      shipping_address_id,
     );
 
     res.status(StatusCodes.CREATED).json({
@@ -55,7 +55,7 @@ export const getMyOrders = async (req: Request, res: Response) => {
     const result = await orderService.getMyOrders(
       userId,
       isNaN(page) || page < 1 ? 1 : page,
-      isNaN(limit) || limit < 1 ? 10 : limit
+      isNaN(limit) || limit < 1 ? 10 : limit,
     );
     res.status(StatusCodes.OK).json({ data: result });
   } catch (error: any) {

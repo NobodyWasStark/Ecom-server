@@ -1,8 +1,8 @@
 import { prisma } from "../../config/prisma.client";
 import {
+  BadRequestError,
   NotFoundError,
   UnauthorizedError,
-  BadRequestError,
 } from "../../shared/errors/app-error";
 import { sendPaymentSuccessEmail } from "../../shared/utils/email.util";
 
@@ -38,10 +38,10 @@ export const initiatePayment = async (userId: string, orderId: string) => {
     const amount = order.total_amount.toLocaleString();
     const whatsappMessage = encodeURIComponent(
       `🛒 *Atom Drops — bKash Payment*\n\n` +
-      `Order ID: ${order.id}\n` +
-      `Amount: ৳${amount}\n` +
-      `Payment Ref: ${paymentID}\n\n` +
-      `I'd like to pay for my order via bKash. Please confirm once received.`
+        `Order ID: ${order.id}\n` +
+        `Amount: ৳${amount}\n` +
+        `Payment Ref: ${paymentID}\n\n` +
+        `I'd like to pay for my order via bKash. Please confirm once received.`,
     );
     const whatsappURL = `https://wa.me/8801997125063?text=${whatsappMessage}`;
 

@@ -1,12 +1,12 @@
 import { Router } from "express";
-import * as authController from "./auth.controller";
 import { authenticate } from "../../shared/middlewares/auth.middleware";
 import { validate } from "../../shared/middlewares/validate.middleware";
+import * as authController from "./auth.controller";
 import {
-  registerSchema,
   loginSchema,
-  passwordResetRequestSchema,
   passwordResetConfirmSchema,
+  passwordResetRequestSchema,
+  registerSchema,
   updateProfileSchema,
 } from "./auth.schema";
 
@@ -19,12 +19,12 @@ router.post("/logout", authController.logout);
 router.post(
   "/password-reset/request",
   validate(passwordResetRequestSchema),
-  authController.requestPasswordReset
+  authController.requestPasswordReset,
 );
 router.post(
   "/password-reset/confirm",
   validate(passwordResetConfirmSchema),
-  authController.resetPassword
+  authController.resetPassword,
 );
 
 // Protected routes
@@ -33,7 +33,7 @@ router.patch(
   "/profile",
   authenticate,
   validate(updateProfileSchema),
-  authController.updateProfile
+  authController.updateProfile,
 );
 
 export default router;

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import * as paymentService from "./payment.service";
 import { StatusCodes } from "http-status-codes";
 import { env } from "../../config/env";
+import * as paymentService from "./payment.service";
 
 export const initPayment = async (req: Request, res: Response) => {
   try {
@@ -23,13 +23,13 @@ export const bkashCallback = async (req: Request, res: Response) => {
 
     if (!paymentID || typeof paymentID !== "string") {
       return res.redirect(
-        `${env.FRONTEND_URL}/payment/failed?message=invalid_payment`
+        `${env.FRONTEND_URL}/payment/failed?message=invalid_payment`,
       );
     }
 
     if (status === "cancel" || status === "failure") {
       return res.redirect(
-        `${env.FRONTEND_URL}/payment/failed?message=${status}`
+        `${env.FRONTEND_URL}/payment/failed?message=${status}`,
       );
     }
 
@@ -46,8 +46,7 @@ export const mockBkashPage = (req: Request, res: Response) => {
     return res.status(StatusCodes.NOT_FOUND).json({ error: "Not available" });
   }
 
-  const paymentID = String(req.query.paymentID || "")
-    .replace(/[<>"'&]/g, ""); // Sanitize to prevent XSS
+  const paymentID = String(req.query.paymentID || "").replace(/[<>"'&]/g, ""); // Sanitize to prevent XSS
   res.send(`
     <h1>Mock bKash Payment Page</h1>
     <p>Payment ID: ${paymentID}</p>
